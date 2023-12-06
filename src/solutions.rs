@@ -1,21 +1,21 @@
-use std::{fs, collections::HashMap};
+use std::fs;
 use regex::Regex;
 
-pub fn aoc23_1_1() -> i64 {
-    fs::read_to_string("input/input_day1").unwrap().split("\n").map(|l: &str|  {
+pub fn d1p1() -> i64 {
+    fs::read_to_string("input/day1").unwrap().split("\n").map(|l: &str|  {
         let digits: Vec<char> = l.chars().filter(|e: &char| e.is_digit(10) ).collect();
         format!("{}{}", digits.first().unwrap(), digits.last().unwrap()).parse::<i64>().unwrap()
     }).sum::<i64>()
 }
 
-pub fn aoc23_1_2() -> i64 {
-    let numstrings: HashMap<&str, i64> = HashMap::from([("one", 1), ("two", 2), ("three", 3),
-        ("four", 4), ("five", 5), ("six", 6), ("seven", 7), ("eight", 8), ("nine", 9)]); 
-    fs::read_to_string("input/input_day1").unwrap().split("\n").map(|l: &str|  {
+pub fn d1p2() -> i64 {
+    let numstrings: Vec<(&str, i64)> = vec![("one", 1), ("two", 2), ("three", 3),
+        ("four", 4), ("five", 5), ("six", 6), ("seven", 7), ("eight", 8), ("nine", 9)]; 
+    fs::read_to_string("input/day1").unwrap().split("\n").map(|l: &str|  {
         let mut all: Vec<(usize, i64)> = vec![];
         ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"].into_iter().for_each(|n: &str| 
             l.match_indices(n).map(|mi: (usize, &str)| mi.0).for_each( |f: usize| 
-                all.push((f, numstrings.get(n).unwrap().clone()))
+                all.push((f, numstrings.clone().into_iter().find(|ns| ns.0 == n).unwrap().clone().1))
             ));
         (1..10).for_each(|n: i64| 
             l.match_indices(&n.to_string()).for_each(|e: (usize, &str)| all.push((e.0, n)))
@@ -25,66 +25,58 @@ pub fn aoc23_1_2() -> i64 {
     }).sum::<i64>()
 }
 
-pub fn aoc23_2_1() -> i64 {
-    let mut total: i64 = 0;
-    fs::read_to_string("input/input_day2").unwrap().split("\n").for_each(|l: &str|  {
+pub fn d2p1() -> i64 {
+    fs::read_to_string("input/day2").unwrap().split("\n").map(|l: &str|  {
         let mut valid: bool = true;
-        l.split(":").last().unwrap().split(";").for_each(|e| {
-            Regex::new(r"([0-9]+) red").unwrap().captures_iter(e).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[r]|  {
-                if r > 12 { valid = false; }});
-            Regex::new(r"([0-9]+) green").unwrap().captures_iter(e).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[g]| {
-                if g > 13 { valid = false; }});
-            Regex::new(r"([0-9]+) blue").unwrap().captures_iter(e).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[b]| {
-                if b > 14 { valid = false; }});
-        });
-        if valid { total += Regex::new(r"Game ([0-9]+):").unwrap().captures(l).unwrap()[1].to_string().parse::<i64>().unwrap(); }
-    });
-    total
+        let line = l.split(":").last().unwrap();
+        if Regex::new(r"([0-9]+) red").unwrap().captures_iter(line).any(|r|  {
+            r.iter().nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap() > 12}) {valid = false};
+        if Regex::new(r"([0-9]+) green").unwrap().captures_iter(line).any(|r|  {
+            r.iter().nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap() > 13}) {valid = false};
+        if Regex::new(r"([0-9]+) blue").unwrap().captures_iter(line).any(|r|  {
+            r.iter().nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap() > 14}) {valid = false};
+        if valid {Regex::new(r"Game ([0-9]+):").unwrap().captures(l).unwrap()[1].to_string().parse::<i64>().unwrap()} else {0}
+    }).sum()
 }
 
-pub fn aoc23_2_2() -> i64 {
-    fs::read_to_string("input/input_day2").unwrap().split("\n").map(|l: &str|  {
+pub fn d2p2() -> i64 {
+    fs::read_to_string("input/day2").unwrap().split("\n").map(|l: &str|  {
         let [mut minred, mut mingreen, mut minblue] = [0, 0, 0];
-        l.split(":").last().unwrap().split(";").for_each(|e| {
-            Regex::new(r"([0-9]+) red").unwrap().captures_iter(e).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[r]|  {
-                if r > minred { minred = r }});
-            Regex::new(r"([0-9]+) green").unwrap().captures_iter(e).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[g]| {
-                if g > mingreen { mingreen = g }});
-            Regex::new(r"([0-9]+) blue").unwrap().captures_iter(e).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[b]| {
-                if b > minblue { minblue = b }});
-        });
+        let line = l.split(":").last().unwrap();
+        Regex::new(r"([0-9]+) red").unwrap().captures_iter(line).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[r]|  {
+            if r > minred { minred = r }});
+        Regex::new(r"([0-9]+) green").unwrap().captures_iter(line).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[g]| {
+            if g > mingreen { mingreen = g }});
+        Regex::new(r"([0-9]+) blue").unwrap().captures_iter(line).map(|c| c.extract().1.map(|a| a.parse::<i64>().unwrap())).for_each(|[b]| {
+            if b > minblue { minblue = b }});
         minred * mingreen * minblue
     }).sum()
 }
 
-
-pub fn aoc23_3_1() -> i64 {
+pub fn d3p1() -> i64 {
     let mut numbers: Vec<(i64, i64, i64, i64)>  = vec![];
-    let mut symbols: Vec<(String, i64, i64)>  = vec![];
-    fs::read_to_string("input/input_day3").unwrap().split("\n").enumerate().for_each(|(i, l)|  {
+    let mut symbols: Vec<(i64, i64)>  = vec![];
+    fs::read_to_string("input/day3").unwrap().split("\n").enumerate().for_each(|(i, l)|  {
         Regex::new(r"([0-9]+)").unwrap().captures_iter(l).for_each(|c| {
             let found = c.iter().find(|cc| cc.is_some()).unwrap().unwrap();
             numbers.push((found.as_str().parse::<i64>().unwrap(), i as i64, found.start() as i64, found.end() as i64))
         });
         Regex::new(r"([^0-9, ^.])").unwrap().captures_iter(l).for_each(|c| {
             let found = c.iter().find(|cc| cc.is_some()).unwrap().unwrap();
-            symbols.push((found.as_str().to_owned(), i as i64, found.start() as i64))
+            symbols.push((i as i64, found.start() as i64))
         });
     });
     numbers.into_iter().map(|n| {
-        if ((n.2 - 1)..(n.3 + 1)).map(|x| {
-            symbols.clone().into_iter().map(|s| {
-                s.1 >= (n.1 - 1) && s.1 <= (n.1 + 1) && x == s.2
-            }).reduce(|a, b| a || b).unwrap()
+        if symbols.clone().into_iter().map(|s| {
+            s.0 >= (n.1 - 1) && s.0 <= (n.1 + 1) && s.1 >= n.2 - 1 && s.1 <= n.3
         }).reduce(|a, b| a || b).unwrap() {n.0} else {0}
     }).sum()
 }
 
-
-pub fn aoc23_3_2() -> i64 {
+pub fn d3p2() -> i64 {
     let mut numbers: Vec<(i64, i64, i64, i64)>  = vec![];
     let mut symbols: Vec<(String, i64, i64, Vec<i64>)>  = vec![];
-    fs::read_to_string("input/input_day3").unwrap().split("\n").enumerate().for_each(|(i, l)|  {
+    fs::read_to_string("input/day3").unwrap().split("\n").enumerate().for_each(|(i, l)|  {
         Regex::new(r"([0-9]+)").unwrap().captures_iter(l).for_each(|c| {
             let found = c.iter().find(|cc| cc.is_some()).unwrap().unwrap();
             numbers.push((found.as_str().parse::<i64>().unwrap(), i as i64, found.start() as i64, found.end() as i64))
@@ -108,9 +100,8 @@ pub fn aoc23_3_2() -> i64 {
     }).sum()
 }
 
-
-pub fn aoc23_4_1() -> i64 {
-    let file = fs::read_to_string("input/input_day4").unwrap(); 
+pub fn d4p1() -> i64 {
+    let file = fs::read_to_string("input/day4").unwrap(); 
     let lines = file.split("\n");
     let tocheck: Vec<usize> = lines.clone().enumerate().map(|(i, _)| i).collect();
     tocheck.clone().into_iter().map(|i|  {
@@ -126,20 +117,17 @@ pub fn aoc23_4_1() -> i64 {
             found.as_str().parse::<i64>().unwrap()
         }).collect();
         let all: i64 = winningnumbers.into_iter().map(|wn| {
-            if havenumbers.clone().into_iter().map(|hn| {
-                if wn == hn {1} else {0}
-            }).sum::<i64>() > 0 {1} else {0}
+            if havenumbers.clone().into_iter().find(|hn| wn == *hn).is_some() {1} else {0}
         }).sum::<i64>();
         if all == 0 {0} else {(2 as i64).pow((all - 1) as u32)}
     }).sum::<i64>()
 }
 
-pub fn aoc23_4_2() -> i64 {
-    let file = fs::read_to_string("input/input_day4").unwrap(); 
+pub fn d4p2() -> i64 {
+    let file = fs::read_to_string("input/day4").unwrap(); 
     let lines = file.split("\n");
-    let mut tocheck: Vec<usize> = lines.clone().enumerate().map(|(i, _)| i).collect();
-    let mut total = tocheck.clone().len();
-    let winmap: Vec<(usize, usize)> = tocheck.clone().into_iter().map(|i|  {
+    let tocheck: Vec<usize> = lines.clone().enumerate().map(|(i, _)| i).collect();
+    let mut winmap: Vec<(usize, usize, usize)> = tocheck.clone().into_iter().map(|i|  {
         let line = lines.clone().into_iter().nth(i).unwrap();
         let winning = line.split(":").last().unwrap().split("|").next().unwrap();
         let have = line.split(":").last().unwrap().split("|").last().unwrap();
@@ -152,60 +140,56 @@ pub fn aoc23_4_2() -> i64 {
             found.as_str().parse::<i64>().unwrap()
         }).collect();
         let all = winningnumbers.into_iter().map(|wn| {
-            havenumbers.clone().into_iter().map(|hn| {
-                if wn == hn {1} else {0}
-            }).sum::<i64>()
+            if havenumbers.clone().into_iter().find(|hn| wn == *hn).is_some() {1} else {0}
         }).sum::<i64>();
-        (i, all as usize)
-    }).collect::<Vec<(usize, usize)>>();
-    while tocheck.len() > 0 {
-        let mut newtocheck = vec![];
-        tocheck.clone().into_iter().for_each(|tc| {
-            let won = winmap.clone().into_iter().find(|wp| wp.0 == tc);
-            if won.is_some() {
-                (0..won.unwrap().1).for_each(|new| {
-                    newtocheck.push(tc + 1 + (new as usize));
-                });
-            }
+        (i, all as usize, 1)
+    }).collect::<Vec<(usize, usize, usize)>>();
+    (0..winmap.len()).into_iter().map(|gamenum| {
+        (0..winmap[gamenum].1).for_each(|offset| {
+            winmap[gamenum + 1 + offset].2 += winmap[gamenum].2;
         });
-        total += newtocheck.len();
-        tocheck = newtocheck;
-    }
-    total as i64
+        winmap[gamenum].2 as i64
+    }).sum()
 }
 
-pub fn aoc23_5_1() -> i64 {
+pub fn d5p1() -> i64 {
     let mut seeds: Vec<i64> = vec![];
     let mut maps: Vec<(String, String, Vec<(i64, i64, i64)>)> = vec![];
-    fs::read_to_string("input/input_day5").unwrap().split("\n\n").enumerate().for_each(|(i, block)|  {
-        if i == 0 {
-            Regex::new(r"([0-9]+)").unwrap().captures_iter(block).for_each(|c| {
-                let found = c.iter().find(|cc| cc.is_some()).unwrap().unwrap();
-                seeds.push(found.as_str().parse::<i64>().unwrap());
-            });
-        } else {
-            let mut source: String = "".to_string();
-            let mut destination: String = "".to_string();
-            let mut numbers: Vec<(i64, i64, i64)> = vec![];
-            block.split("\n").enumerate().for_each(|(i, line)| {
-                if i == 0 {
-                    Regex::new(r"([a-z]+)-to-([a-z]+) map").unwrap().captures_iter(block).for_each(|c| {
-                        let sourceparsed = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
-                        let destinationparsed = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
-                        source = sourceparsed.as_str().to_owned();
-                        destination = destinationparsed.as_str().to_owned();
-                     });
-                } else {
-                    Regex::new(r"([0-9]+) ([0-9]+) ([0-9]+)").unwrap().captures_iter(line).for_each(|c| {
-                        let destinationrange = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
-                        let sourcerange = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
-                        let rangelen = c.iter().filter(|cc| cc.is_some()).nth(3).unwrap().unwrap();
-                        numbers.push((destinationrange.as_str().parse::<i64>().unwrap(),
-                        sourcerange.as_str().parse::<i64>().unwrap(), rangelen.as_str().parse::<i64>().unwrap()));
-                    });
-                }
-            });
-            maps.push((source, destination, numbers))
+    fs::read_to_string("input/day5").unwrap().split("\n\n").enumerate().for_each(|(i, block)|  {
+        match i {
+            0 => {
+                Regex::new(r"([0-9]+)").unwrap().captures_iter(block).for_each(|c| {
+                    let found = c.iter().find(|cc| cc.is_some()).unwrap().unwrap();
+                    seeds.push(found.as_str().parse::<i64>().unwrap());
+                });
+            },
+            _ => {
+                let mut source: String = "".to_string();
+                let mut destination: String = "".to_string();
+                let mut numbers: Vec<(i64, i64, i64)> = vec![];
+                block.split("\n").enumerate().for_each(|(i, line)| {
+                    match i {
+                        0 => {
+                            Regex::new(r"([a-z]+)-to-([a-z]+) map").unwrap().captures_iter(block).for_each(|c| {
+                                let sourceparsed = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
+                                let destinationparsed = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
+                                source = sourceparsed.as_str().to_owned();
+                                destination = destinationparsed.as_str().to_owned();
+                            });
+                        },
+                        _ => {
+                            Regex::new(r"([0-9]+) ([0-9]+) ([0-9]+)").unwrap().captures_iter(line).for_each(|c| {
+                                let destinationrange = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
+                                let sourcerange = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
+                                let rangelen = c.iter().filter(|cc| cc.is_some()).nth(3).unwrap().unwrap();
+                                numbers.push((destinationrange.as_str().parse::<i64>().unwrap(),
+                                sourcerange.as_str().parse::<i64>().unwrap(), rangelen.as_str().parse::<i64>().unwrap()));
+                            });
+                        }
+                    }
+                });
+                maps.push((source, destination, numbers))
+            }
         }
     });
     seeds.into_iter().map(|seed| {
@@ -225,40 +209,45 @@ pub fn aoc23_5_1() -> i64 {
     }).min().unwrap()
 }
 
-
-pub fn aoc23_5_2() -> i64 {
+pub fn d5p2() -> i64 {
     let mut seedranges: Vec<(i64, i64)> = vec![];
     let mut maps: Vec<(String, String, Vec<(i64, i64, i64)>)> = vec![];
-    fs::read_to_string("input/input_day5").unwrap().split("\n\n").enumerate().for_each(|(i, block)|  {
-        if i == 0 {
-            Regex::new(r"([0-9]+) ([0-9]+)").unwrap().captures_iter(block).for_each(|c| {
-                let rangestart = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap();
-                let rangelen = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap().as_str().parse::<i64>().unwrap();
-                seedranges.push((rangestart, rangelen));
-            });
-        } else {
-            let mut source: String = "".to_string();
-            let mut destination: String = "".to_string();
-            let mut numbers: Vec<(i64, i64, i64)> = vec![];
-            block.split("\n").enumerate().for_each(|(i, line)| {
-                if i == 0 {
-                    Regex::new(r"([a-z]+)-to-([a-z]+) map").unwrap().captures_iter(block).for_each(|c| {
-                        let sourceparsed = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
-                        let destinationparsed = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
-                        source = sourceparsed.as_str().to_owned();
-                        destination = destinationparsed.as_str().to_owned();
-                     });
-                } else {
-                    Regex::new(r"([0-9]+) ([0-9]+) ([0-9]+)").unwrap().captures_iter(line).for_each(|c| {
-                        let destinationrange = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
-                        let sourcerange = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
-                        let rangelen = c.iter().filter(|cc| cc.is_some()).nth(3).unwrap().unwrap();
-                        numbers.push((destinationrange.as_str().parse::<i64>().unwrap(),
-                        sourcerange.as_str().parse::<i64>().unwrap(), rangelen.as_str().parse::<i64>().unwrap()));
-                    });
-                }
-            });
-            maps.push((source, destination, numbers))
+    fs::read_to_string("input/day5").unwrap().split("\n\n").enumerate().for_each(|(i, block)|  {
+        match i {
+            0 => {
+                Regex::new(r"([0-9]+) ([0-9]+)").unwrap().captures_iter(block).for_each(|c| {
+                    let rangestart = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap();
+                    let rangelen = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap().as_str().parse::<i64>().unwrap();
+                    seedranges.push((rangestart, rangelen));
+                });
+            },
+            _ => {
+                let mut source: String = "".to_string();
+                let mut destination: String = "".to_string();
+                let mut numbers: Vec<(i64, i64, i64)> = vec![];
+                block.split("\n").enumerate().for_each(|(i, line)| {
+                    match i {
+                        0 => {
+                            Regex::new(r"([a-z]+)-to-([a-z]+) map").unwrap().captures_iter(block).for_each(|c| {
+                                let sourceparsed = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
+                                let destinationparsed = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
+                                source = sourceparsed.as_str().to_owned();
+                                destination = destinationparsed.as_str().to_owned();
+                            });
+                        },
+                        _ => {
+                            Regex::new(r"([0-9]+) ([0-9]+) ([0-9]+)").unwrap().captures_iter(line).for_each(|c| {
+                                let destinationrange = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
+                                let sourcerange = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
+                                let rangelen = c.iter().filter(|cc| cc.is_some()).nth(3).unwrap().unwrap();
+                                numbers.push((destinationrange.as_str().parse::<i64>().unwrap(),
+                                sourcerange.as_str().parse::<i64>().unwrap(), rangelen.as_str().parse::<i64>().unwrap()));
+                            });
+                        }
+                    }
+                });
+                maps.push((source, destination, numbers))
+            }
         }
     });
     let result = seedranges.into_iter().map(|seedrange| {
@@ -292,4 +281,31 @@ pub fn aoc23_5_2() -> i64 {
         currentranges
     });
     result.clone().flat_map(|r| r.into_iter().map(|rr| rr.0)).min().unwrap()
+}
+
+pub fn d6p1() -> i64 {
+    let lines = fs::read_to_string("input/day6").unwrap(); 
+    let times: Vec<i64> = Regex::new(r"([0-9]+)").unwrap().captures_iter(lines.split("\n").nth(0).unwrap()).map(|c| {
+        c.iter().nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap()
+    }).collect();
+    let distances: Vec<i64> = Regex::new(r"([0-9]+)").unwrap().captures_iter(lines.split("\n").nth(1).unwrap()).map(|c| {
+        c.iter().nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap()
+    }).collect();
+    times.into_iter().enumerate().map(|(i, t)| {
+        (0..t+1).into_iter().map(|wait| {
+            if wait * (t - wait) > distances[i] {1} else {0}
+        }).sum::<i64>()
+    }).reduce(|a, b| a * b).unwrap()
+}
+
+pub fn d6p2() -> i64 {
+    let lines = fs::read_to_string("input/day6").unwrap(); 
+    let time: i64 = Regex::new(r"([0-9]+)").unwrap().captures_iter(lines.split("\n").nth(0).unwrap()).map(|c| {
+        c.iter().nth(1).unwrap().unwrap().as_str().to_owned()
+    }).reduce(|a, b| a + b.as_str()).unwrap().parse::<i64>().unwrap();
+    let distance: i64 = Regex::new(r"([0-9]+)").unwrap().captures_iter(lines.split("\n").nth(1).unwrap()).map(|c| {
+        c.iter().nth(1).unwrap().unwrap().as_str().to_owned()
+    }).reduce(|a, b| a + b.as_str()).unwrap().parse::<i64>().unwrap();
+    let wait: f64 = ((time as f64)+ ((time.pow(2) - 4 * distance) as f64).sqrt()) / 2.0;
+    time - (2 * wait.min((time as f64) - wait).ceil() as i64) + 1
 }
