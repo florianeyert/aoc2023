@@ -1,4 +1,4 @@
-use std::fs;
+use std::{fs, collections::HashMap};
 use regex::Regex;
 
 pub fn d1p1() -> i64 {
@@ -171,19 +171,15 @@ pub fn d5p1() -> i64 {
                     match i {
                         0 => {
                             Regex::new(r"([a-z]+)-to-([a-z]+) map").unwrap().captures_iter(block).for_each(|c| {
-                                let sourceparsed = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
-                                let destinationparsed = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
-                                source = sourceparsed.as_str().to_owned();
-                                destination = destinationparsed.as_str().to_owned();
+                                source = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap().as_str().to_owned();
+                                destination = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap().as_str().to_owned();
                             });
                         },
                         _ => {
                             Regex::new(r"([0-9]+) ([0-9]+) ([0-9]+)").unwrap().captures_iter(line).for_each(|c| {
-                                let destinationrange = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
-                                let sourcerange = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
-                                let rangelen = c.iter().filter(|cc| cc.is_some()).nth(3).unwrap().unwrap();
-                                numbers.push((destinationrange.as_str().parse::<i64>().unwrap(),
-                                sourcerange.as_str().parse::<i64>().unwrap(), rangelen.as_str().parse::<i64>().unwrap()));
+                                numbers.push((c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap(),
+                                c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap().as_str().parse::<i64>().unwrap(),
+                                c.iter().filter(|cc| cc.is_some()).nth(3).unwrap().unwrap().as_str().parse::<i64>().unwrap()));
                             });
                         }
                     }
@@ -200,8 +196,7 @@ pub fn d5p1() -> i64 {
             currentsource = currentmap.1;
             let currentnumbertmp: i64 = currentmap.2.into_iter().map(|range| {
                 if currentnumber >= range.1 && currentnumber < range.1 + range.2 {
-                    range.0 + (currentnumber - range.1)
-                } else {0}
+                    range.0 + (currentnumber - range.1)} else {0}
             }).sum();
             currentnumber = if currentnumbertmp > 0 {currentnumbertmp} else {currentnumber}
         }
@@ -229,19 +224,15 @@ pub fn d5p2() -> i64 {
                     match i {
                         0 => {
                             Regex::new(r"([a-z]+)-to-([a-z]+) map").unwrap().captures_iter(block).for_each(|c| {
-                                let sourceparsed = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
-                                let destinationparsed = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
-                                source = sourceparsed.as_str().to_owned();
-                                destination = destinationparsed.as_str().to_owned();
+                                source = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap().as_str().to_owned();
+                                destination = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap().as_str().to_owned();
                             });
                         },
                         _ => {
                             Regex::new(r"([0-9]+) ([0-9]+) ([0-9]+)").unwrap().captures_iter(line).for_each(|c| {
-                                let destinationrange = c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap();
-                                let sourcerange = c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap();
-                                let rangelen = c.iter().filter(|cc| cc.is_some()).nth(3).unwrap().unwrap();
-                                numbers.push((destinationrange.as_str().parse::<i64>().unwrap(),
-                                sourcerange.as_str().parse::<i64>().unwrap(), rangelen.as_str().parse::<i64>().unwrap()));
+                                numbers.push((c.iter().filter(|cc| cc.is_some()).nth(1).unwrap().unwrap().as_str().parse::<i64>().unwrap(),
+                                c.iter().filter(|cc| cc.is_some()).nth(2).unwrap().unwrap().as_str().parse::<i64>().unwrap(),
+                                c.iter().filter(|cc| cc.is_some()).nth(3).unwrap().unwrap().as_str().parse::<i64>().unwrap()));
                             });
                         }
                     }
@@ -308,4 +299,74 @@ pub fn d6p2() -> i64 {
     }).reduce(|a, b| a + b.as_str()).unwrap().parse::<i64>().unwrap();
     let wait: f64 = ((time as f64)+ ((time.pow(2) - 4 * distance) as f64).sqrt()) / 2.0;
     time - (2 * wait.min((time as f64) - wait).ceil() as i64) + 1
+}
+
+pub fn d7p1() -> i64 {
+    let file: String = fs::read_to_string("input/day7").unwrap();
+    let hands = file.split("\n").map(|l|
+        (l.split(" ").nth(0).unwrap().chars().collect::<Vec<char>>(), l.split(" ").nth(1).unwrap().parse::<i64>().unwrap())); 
+    let card_values: HashMap<char, i64> = HashMap::from([('A', 14), ('K', 13), ('Q', 12), ('J', 11), ('T', 10),
+        ('9', 9), ('8', 8), ('7', 7), ('6', 6), ('5', 5), ('4', 4), ('3', 3), ('2', 2), ('1', 1),]);
+    let mut res: Vec<(i64, i64)> = hands.map(|h| 
+        ({
+            let mut all: HashMap<char, usize> = HashMap::new();
+            h.0.iter().for_each(|card| {
+                all.insert(*card, {
+                    match all.get(card) { Some(c) => c + 1, None => 1 }
+                });
+            });
+            let mut vals: Vec<usize> = all.into_iter().map(|e| e.1).collect();
+            vals.sort_by(|a, b| b.cmp(a));
+            match (vals.iter().nth(0).unwrap(), vals.iter().nth(1).unwrap_or(&0)) {
+                (5, _) => 7, (4, _) => 6, (3, 2) => 5, (3, _) => 4, (2, 2) => 3, (2, _) => 2, _ =>  1
+            }
+        } * (10 as i64).pow(10)
+        + (0..=4).into_iter().map(|i| {
+            card_values.get(h.0.iter().nth(i).unwrap()).unwrap().to_owned() * (10 as i64).pow(8 - 2*i as u32)
+        }).sum::<i64>(),
+        h.1)
+    ).collect::<Vec<(i64, i64)>>();
+    res.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    res.into_iter().enumerate().map(|(i, e)| ((i + 1) as i64) * e.1).sum()
+}
+
+pub fn d7p2() -> i64 {
+    let file: String = fs::read_to_string("input/day7").unwrap();
+    let hands = file.split("\n").map(|l|
+        (l.split(" ").nth(0).unwrap().chars().collect::<Vec<char>>(), l.split(" ").nth(1).unwrap().parse::<i64>().unwrap())); 
+    let card_values: HashMap<char, i64> = HashMap::from([('A', 14), ('K', 13), ('Q', 12), ('J', 11), ('T', 10),
+        ('9', 9), ('8', 8), ('7', 7), ('6', 6), ('5', 5), ('4', 4), ('3', 3), ('2', 2), ('1', 1), ('J', 0)]);
+    let mut res: Vec<(i64, i64)> = hands.map(|h| 
+        ({
+            let mut all: HashMap<char, usize> = HashMap::new();
+            h.0.iter().for_each(|card| {
+                if *card != 'J' {
+                    all.insert(*card, {
+                        match all.get(card) { Some(c) => c + 1, None => 1 }
+                    });
+                }
+            });
+            let mut vals: Vec<(char, usize)> = all.into_iter().map(|e| e).collect();
+            vals.sort_by(|a, b| b.1.cmp(&a.1));
+            all = HashMap::new();
+            h.0.iter().for_each(|card| {
+                let replacedcard = if *card == 'J' {vals.iter().nth(0).unwrap_or(&('A', 5)).0}
+                    else {card.to_owned()};
+                all.insert(replacedcard, {
+                    match all.get(&replacedcard) { Some(c) => c + 1, None => 1 }
+                });
+            });
+            let mut vals: Vec<usize> = all.into_iter().map(|e| e.1).collect();
+            vals.sort_by(|a, b| b.cmp(&a));
+            match (vals.iter().nth(0).unwrap(), vals.iter().nth(1).unwrap_or(&0)) {
+                (5, _) => 7, (4, _) => 6, (3, 2) => 5, (3, _) => 4, (2, 2) => 3, (2, _) => 2, _ =>  1
+            }
+        } * (10 as i64).pow(10)
+         + (0..=4).into_iter().map(|i| {
+            card_values.get(h.0.iter().nth(i).unwrap()).unwrap().to_owned() * (10 as i64).pow(8 - 2*i as u32)
+        }).sum::<i64>(),
+        h.1)
+    ).collect::<Vec<(i64, i64)>>();
+    res.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    res.into_iter().enumerate().map(|(i, e)| ((i + 1) as i64) * e.1).sum()
 }

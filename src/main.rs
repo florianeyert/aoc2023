@@ -9,7 +9,7 @@ fn compute_answer(day: usize, part: usize, solution: &(&fn() -> i64, Option<i64>
     if (solution.1).is_some() {
         assert_eq!(result, (solution.1).unwrap())
     }
-    println!("[Day {}][Part {}] Solution: {} [{}.{:0>3}ms]", day, part, result,
+    println!("[Day {: >2}][Part {}] Solution: {: >12} [{: >3}.{:0>3}ms]", day, part, result,
     now.elapsed().as_millis(), now.elapsed().as_micros() % 1000);
 }
 fn main() {
@@ -26,7 +26,9 @@ fn main() {
         ((5, 1), (&(solutions::d5p1 as fn() -> i64), Some(226172555))),
         ((5, 2), (&(solutions::d5p2 as fn() -> i64), Some(47909639))),
         ((6, 1), (&(solutions::d6p1 as fn() -> i64), Some(2374848))),
-        ((6, 2), (&(solutions::d6p2 as fn() -> i64), Some(39132886)))
+        ((6, 2), (&(solutions::d6p2 as fn() -> i64), Some(39132886))),
+        ((7, 1), (&(solutions::d7p1 as fn() -> i64), None)),
+        ((7, 2), (&(solutions::d7p2 as fn() -> i64), None)),
     ]); 
 
     if !(args.len() == 3 || (args.len() == 2 && args[1].as_str() == "all")) {
@@ -45,7 +47,7 @@ fn main() {
                 elapsed.as_secs(), elapsed.as_millis() % 1000, elapsed.as_millis() / num_solutions as u128);
         },
         _ =>  match args[1].parse::<usize>() {
-            Ok(day @ 1..=6)  => match args[2].parse::<usize>() {
+            Ok(day @ 1..=7)  => match args[2].parse::<usize>() {
                 Ok(part @ 1..=2) => {compute_answer(day, part, 
                     &solutions.iter().find(|s| s.0.0 == day && s.0.1 == part).unwrap().1)}
                 Ok(part ) => {
