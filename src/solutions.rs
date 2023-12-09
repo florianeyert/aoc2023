@@ -370,3 +370,96 @@ pub fn d7p2() -> i64 {
     res.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
     res.into_iter().enumerate().map(|(i, e)| ((i + 1) as i64) * e.1).sum()
 }
+
+pub fn d8p1() -> i64 {
+    let file: String = fs::read_to_string("input/day8").unwrap();
+    let directions: Vec<char> = file.split("\n").nth(0).unwrap().chars().collect::<Vec<char>>();
+    let mut network: HashMap<String, (String, String)> = HashMap::new();
+    file.split("\n").skip(2).for_each(|nl| {
+        Regex::new(r"([A-Z]+) = \(([A-Z]+), ([A-Z]+)\)").unwrap().captures_iter(nl).for_each(|c| {
+            network.insert(c.iter().nth(1).unwrap().unwrap().as_str().to_owned(),
+            (c.iter().nth(2).unwrap().unwrap().as_str().to_owned(), c.iter().nth(3).unwrap().unwrap().as_str().to_owned()));
+        });
+    });
+    let mut currentnode: String = "AAA".to_owned();
+    let mut di: usize = 0;
+    let mut steps: i64 = 0;
+    while currentnode != "ZZZ" {
+        match directions[di] {
+            'L' => {currentnode = network.get(&currentnode).unwrap().0.clone()},
+            'R' => {currentnode = network.get(&currentnode).unwrap().1.clone()},
+            _ => {}
+        }
+        di = (di + 1) % directions.len();
+        steps += 1;
+    }
+    steps
+}
+
+pub fn d8p2() -> i64 {
+    let file: String = fs::read_to_string("input/day8").unwrap();
+    let directions: Vec<char> = file.split("\n").nth(0).unwrap().chars().collect::<Vec<char>>();
+    let mut network: HashMap<String, (String, String)> = HashMap::new();
+    file.split("\n").skip(2).for_each(|nl| {
+        Regex::new(r"([A-Z]+) = \(([A-Z]+), ([A-Z]+)\)").unwrap().captures_iter(nl).for_each(|c| {
+            network.insert(c.iter().nth(1).unwrap().unwrap().as_str().to_owned(),
+            (c.iter().nth(2).unwrap().unwrap().as_str().to_owned(), c.iter().nth(3).unwrap().unwrap().as_str().to_owned()));
+        });
+    });
+    let currentnodes: Vec<&String> = network.keys().filter(|k| k.chars().into_iter().nth(2).unwrap() == 'A').collect::<Vec<&String>>(); 
+    let mut di: usize = 0;
+    currentnodes.clone().into_iter().map(|cn| {
+        let (mut steps, mut iterations, mut iteratingnode) = (0, 0, cn.to_owned());
+        while iteratingnode.chars().into_iter().nth(2).unwrap() != 'Z' { 
+            match directions[di] {
+                'L' => { iteratingnode = network.get(&iteratingnode).unwrap().0.clone(); },
+                'R' => { iteratingnode = network.get(&iteratingnode).unwrap().1.clone(); },
+                _ => {}
+            }
+            di = (di + 1) % directions.len();
+            if di == 0 {iterations += 1}
+            steps = if di == 0 {0} else {steps + 1}
+        };
+        steps + (directions.len() as i64) * iterations
+    }).reduce(|a, b| {
+        let (mut gcd, mut rem) = (a, b);
+        while rem != 0 {
+            let tmp: i64 = rem;
+            rem = gcd % rem;
+            gcd = tmp;
+        }
+        a * b / gcd
+    }).unwrap()
+}
+
+pub fn d9p1() -> i64 {
+    let file = fs::read_to_string("input/day9").unwrap();
+    file.split("\n").map(|l| {
+        let mut allvalues: Vec<Vec<i64>> = vec![l.split(" ").map(|v| v.parse::<i64>().unwrap()).collect()];
+        while allvalues.last().unwrap().into_iter().find(|v| **v != 0).is_some() {
+            let last = allvalues.last().unwrap();
+            allvalues.push((0..(last.len() - 1)).map(|i| {
+                last[i + 1] - last[i]
+            }).collect::<Vec<i64>>());
+        }
+        allvalues.into_iter().rev().map(|vs| {
+            vs.last().unwrap().to_owned()
+        }).sum::<i64>()
+    }).sum::<i64>()
+}
+
+pub fn d9p2() -> i64 {
+    let file = fs::read_to_string("input/day9").unwrap();
+    file.split("\n").map(|l| {
+        let mut allvalues: Vec<Vec<i64>> = vec![l.split(" ").map(|v| v.parse::<i64>().unwrap()).collect()];
+        while allvalues.last().unwrap().into_iter().find(|v| **v != 0).is_some() {
+            let last = allvalues.last().unwrap();
+            allvalues.push((0..(last.len() - 1)).map(|i| {
+                last[i + 1] - last[i]
+            }).collect::<Vec<i64>>());
+        }
+        allvalues.into_iter().rev().map(|vs| {
+            vs.first().unwrap().to_owned()
+        }).reduce(|a, b| -a + b).unwrap()
+    }).sum::<i64>()
+}
