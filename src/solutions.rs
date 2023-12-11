@@ -463,3 +463,257 @@ pub fn d9p2() -> i64 {
         }).reduce(|a, b| -a + b).unwrap()
     }).sum::<i64>()
 }
+
+pub fn d10p1() -> i64 {
+    let file = fs::read_to_string("input/day10").unwrap();
+    let mut map: HashMap<(usize, usize), (bool, bool, bool, bool)>= HashMap::new();
+    let mut start: (usize, usize) = (0, 0);
+    file.split("\n").enumerate().for_each(|(li, l)| {
+        l.chars().into_iter().enumerate().for_each(|(ci, c)| {
+            let kind: Option<(bool, bool, bool, bool)> = match c {
+                '|' => Some((true, false, true, false)),
+                '-' => Some((false, true, false, true)),
+                'L' => Some((true, true, false, false)),
+                'J' => Some((true, false, false, true)),
+                '7' => Some((false, false, true, true)),
+                'F' => Some((false, true, true, false)),
+                _ => None
+            };
+            if kind.is_some() {
+                map.insert((li, ci), kind.unwrap());
+            }
+            if c == 'S' {start = (li, ci);}
+        });
+    });
+    let mut current = vec![];
+    if map.get(&(start.0 - 1, start.1)).unwrap_or(&(false, false, false, false)).2 {
+        current.push((start.0 - 1, start.1))
+    }
+    if map.get(&(start.0, start.1 + 1)).unwrap_or(&(false, false, false, false)).3 {
+        current.push((start.0, start.1 + 1))
+    }
+    if map.get(&(start.0 + 1, start.1)).unwrap_or(&(false, false, false, false)).0 {
+        current.push((start.0 + 1, start.1))
+    }
+    if map.get(&(start.0, start.1 - 1)).unwrap_or(&(false, false, false, false)).1 {
+        current.push((start.0, start.1 - 1))
+    }
+    let mut step: i64 = 0;
+    let mut partoftheloop: Vec<(usize, usize)> = vec![start.clone()];
+    while current.len() > 0 {
+        partoftheloop.push(current[0]);
+        partoftheloop.push(current[1]);
+        let mut newcurrent = vec![];
+        [0, 1].into_iter().for_each(|ci| {
+            let currentnode = map.get(&current[ci]).unwrap();
+            if currentnode.0 && !partoftheloop.contains(&(current[ci].0 - 1, current[ci].1))
+                && map.get(&(current[ci].0 - 1, current[ci].1)).unwrap_or(&(false, false, false, false)).2 {
+                newcurrent.push((current[ci].0 - 1, current[ci].1));
+            }
+            if currentnode.1 && !partoftheloop.contains(&(current[ci].0, current[ci].1 + 1))
+                && map.get(&(current[ci].0, current[ci].1 + 1)).unwrap_or(&(false, false, false, false)).3 {
+                newcurrent.push((current[ci].0, current[ci].1 + 1));
+            }
+            if currentnode.2 && !partoftheloop.contains(&(current[ci].0 + 1, current[ci].1))
+                && map.get(&(current[ci].0 + 1, current[ci].1)).unwrap_or(&(false, false, false, false)).0 {
+                newcurrent.push((current[ci].0 + 1, current[ci].1));
+            }
+            if currentnode.3 && !partoftheloop.contains(&(current[ci].0, current[ci].1 - 1))
+                && map.get(&(current[ci].0, current[ci].1 - 1)).unwrap_or(&(false, false, false, false)).1 {
+                newcurrent.push((current[ci].0, current[ci].1 - 1));
+            }
+        });
+        step = step + 1;
+        current = newcurrent;
+    }
+    step
+}
+
+pub fn d10p2() -> i64 {
+    let file = fs::read_to_string("input/day10").unwrap();
+    let mut map: HashMap<(usize, usize), (bool, bool, bool, bool)>= HashMap::new();
+    let mut start: (usize, usize) = (0, 0);
+    let mut width: usize = 0;
+    let mut height: usize = 0;
+    file.split("\n").enumerate().for_each(|(li, l)| {
+        height = li + 1;
+        l.chars().into_iter().enumerate().for_each(|(ci, c)| {
+            width = ci + 1;
+            let kind: Option<(bool, bool, bool, bool)> = match c {
+                '|' => Some((true, false, true, false)),
+                '-' => Some((false, true, false, true)),
+                'L' => Some((true, true, false, false)),
+                'J' => Some((true, false, false, true)),
+                '7' => Some((false, false, true, true)),
+                'F' => Some((false, true, true, false)),
+                _ => None
+            };
+            if kind.is_some() {
+                map.insert((li, ci), kind.unwrap());
+            }
+            if c == 'S' {start = (li, ci);}
+        });
+    });
+    let mut current = vec![];
+    if map.get(&(start.0 - 1, start.1)).unwrap_or(&(false, false, false, false)).2 {
+        current.push((start.0 - 1, start.1))
+    }
+    if map.get(&(start.0, start.1 + 1)).unwrap_or(&(false, false, false, false)).3 {
+        current.push((start.0, start.1 + 1))
+    }
+    if map.get(&(start.0 + 1, start.1)).unwrap_or(&(false, false, false, false)).0 {
+        current.push((start.0 + 1, start.1))
+    }
+    if map.get(&(start.0, start.1 - 1)).unwrap_or(&(false, false, false, false)).1 {
+        current.push((start.0, start.1 - 1))
+    }
+    map.insert((start.0, start.1), (
+        map.get(&(start.0 - 1, start.1)).unwrap_or(&(false, false, false, false)).2,
+        map.get(&(start.0, start.1 + 1)).unwrap_or(&(false, false, false, false)).3,
+        map.get(&(start.0 + 1, start.1)).unwrap_or(&(false, false, false, false)).0,
+        map.get(&(start.0, start.1 - 1)).unwrap_or(&(false, false, false, false)).1
+    ));
+    let mut step: i64 = 0;
+    let mut partoftheloop: Vec<(usize, usize)> = vec![start.clone()];
+    while current.len() > 0 {
+        partoftheloop.push(current[0]);
+        partoftheloop.push(current[1]);
+        let mut newcurrent = vec![];
+        [0, 1].into_iter().for_each(|ci| {
+            let currentnode = map.get(&current[ci]).unwrap();
+            if currentnode.0 && !partoftheloop.contains(&(current[ci].0 - 1, current[ci].1))
+                && map.get(&(current[ci].0 - 1, current[ci].1)).unwrap_or(&(false, false, false, false)).2 {
+                newcurrent.push((current[ci].0 - 1, current[ci].1));
+            }
+            if currentnode.1 && !partoftheloop.contains(&(current[ci].0, current[ci].1 + 1))
+                && map.get(&(current[ci].0, current[ci].1 + 1)).unwrap_or(&(false, false, false, false)).3 {
+                newcurrent.push((current[ci].0, current[ci].1 + 1));
+            }
+            if currentnode.2 && !partoftheloop.contains(&(current[ci].0 + 1, current[ci].1))
+                && map.get(&(current[ci].0 + 1, current[ci].1)).unwrap_or(&(false, false, false, false)).0 {
+                newcurrent.push((current[ci].0 + 1, current[ci].1));
+            }
+            if currentnode.3 && !partoftheloop.contains(&(current[ci].0, current[ci].1 - 1))
+                && map.get(&(current[ci].0, current[ci].1 - 1)).unwrap_or(&(false, false, false, false)).1 {
+                newcurrent.push((current[ci].0, current[ci].1 - 1));
+            }
+        });
+        step = step + 1;
+        current = newcurrent;
+    }
+    (0..height).into_iter().map(|h| {
+        (0..width).into_iter().map(|w| {
+            if !partoftheloop.contains(&(h, w))
+                && ({
+                    let [mut bottom, mut top] = [false, false];
+                    let mut barriers = 0;
+                    partoftheloop.iter().filter(|e| e.0 < h && e.1 == w).into_iter().map(|e| map.get(&e).unwrap()).for_each(|e| {
+                        if e.3 {bottom = !bottom}
+                        if e.1 {top = !top}
+                        if bottom && top {
+                            [bottom, top] = [false, false];
+                            barriers += 1;
+                        }
+                    });
+                    barriers % 2 == 1
+                }
+                || {
+                    let [mut left, mut right] = [false, false];
+                    let mut barriers = 0;
+                    partoftheloop.iter().filter(|e| e.0 == h && e.1 < w).into_iter().map(|e| map.get(&e).unwrap()).for_each(|e| {
+                        if e.0 {right = !right}
+                        if e.2 {left = !left}
+                        if left && right {
+                            [left, right] = [false, false];
+                            barriers += 1;
+                        }
+                    });
+                    barriers % 2 == 1
+                }) {1} else {0}
+        }).sum::<i64>()
+    }).sum::<i64>()
+}
+
+pub fn d11p1() -> i64 {
+    let file = fs::read_to_string("input/day11").unwrap();
+    let mut original_cosmos: Vec<Vec<bool>> = vec![];
+    file.split("\n").for_each(|l| {
+        let mut line: Vec<bool> = vec![];
+        l.chars().into_iter().for_each(|c| {
+            line.push(c == '#');
+        });
+        original_cosmos.push(line);
+    });
+    let [height, width] = [original_cosmos.len(), original_cosmos.first().unwrap().len()];
+    let mut emptylines: Vec<usize> = vec![];
+    let mut emptyrows: Vec<usize> = vec![];
+    (0..height).into_iter().for_each(|h| {
+        if original_cosmos[h].iter().map(|e| if *e {1} else {0}).sum::<usize>() == 0 {
+            emptylines.push(h)
+        }
+    });
+    (0..width).into_iter().for_each(|w| {
+        if original_cosmos.iter().map(|e| if e[w] {1} else {0}).sum::<usize>() == 0 {
+            emptyrows.push(w)
+        }
+    });
+    let mut galaxies: Vec<(usize, usize)> = vec![];
+    original_cosmos.iter().enumerate().for_each(|(li, l)| {
+        l.iter().enumerate().for_each(|(ei, e)| {
+            if *e { galaxies.push((li, ei)); }
+        });
+    });
+    galaxies.clone().iter().enumerate().for_each(|(gi1, g1)| {
+        galaxies[gi1] = (g1.0 + emptylines.iter().map(|el| { if *el < g1.0 {1} else {0} }).sum::<usize>(),
+        g1.1 + emptyrows.iter().map(|er| { if *er < g1.1 {1} else {0} }).sum::<usize>());
+    });
+    galaxies.iter().enumerate().map(|(gi1, g1)| {
+        ((gi1 + 1)..galaxies.len()).into_iter().map(|gi2| {
+            ((g1.0 - galaxies[gi2].0) as i64).abs() + ((g1.1 - galaxies[gi2].1) as i64).abs()
+        }).sum::<i64>()
+    }).sum::<i64>()
+}
+
+pub fn d11p2() -> i64 {
+    let file = fs::read_to_string("input/day11").unwrap();
+    let mut original_cosmos: Vec<Vec<bool>> = vec![];
+    file.split("\n").for_each(|l| {
+        let mut line: Vec<bool> = vec![];
+        l.chars().into_iter().for_each(|c| {
+            line.push(c == '#');
+        });
+        original_cosmos.push(line);
+    });
+    let [height, width] = [original_cosmos.len(), original_cosmos.first().unwrap().len()];
+    let mut emptylines: Vec<usize> = vec![];
+    let mut emptyrows: Vec<usize> = vec![];
+    (0..height).into_iter().for_each(|h| {
+        if original_cosmos[h].iter().map(|e| if *e {1} else {0}).sum::<usize>() == 0 {
+            emptylines.push(h)
+        }
+    });
+    (0..width).into_iter().for_each(|w| {
+        if original_cosmos.iter().map(|e| if e[w] {1} else {0}).sum::<usize>() == 0 {
+            emptyrows.push(w)
+        }
+    });
+    let mut galaxies: Vec<(usize, usize)> = vec![];
+    original_cosmos.iter().enumerate().for_each(|(li, l)| {
+        l.iter().enumerate().for_each(|(ei, e)| {
+            if *e { galaxies.push((li, ei)); }
+        });
+    });
+    galaxies.clone().iter().enumerate().for_each(|(gi1, g1)| {
+        galaxies[gi1] = (g1.0 + emptylines.iter().map(|el| {
+            if *el < g1.0 {1} else {0}
+        }).sum::<usize>() * 999999,
+        g1.1 + emptyrows.iter().map(|er| {
+            if *er < g1.1 {1} else {0}
+        }).sum::<usize>() * 999999);
+    });
+    galaxies.iter().enumerate().map(|(gi1, g1)| {
+        ((gi1 + 1)..galaxies.len()).into_iter().map(|gi2| {
+            ((g1.0 - galaxies[gi2].0) as i64).abs() + ((g1.1 - galaxies[gi2].1) as i64).abs()
+        }).sum::<i64>()
+    }).sum::<i64>()
+}

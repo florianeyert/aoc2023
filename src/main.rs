@@ -33,6 +33,10 @@ fn main() {
         ((8, 2), (&(solutions::d8p2 as fn() -> i64), Some(7309459565207))),
         ((9, 1), (&(solutions::d9p1 as fn() -> i64), Some(2043677056))),
         ((9, 2), (&(solutions::d9p2 as fn() -> i64), Some(1062))),
+        ((10, 1), (&(solutions::d10p1 as fn() -> i64), Some(6717))),
+        ((10, 2), (&(solutions::d10p2 as fn() -> i64), Some(381))),
+        ((11, 1), (&(solutions::d11p1 as fn() -> i64), Some(9545480))),
+        ((11, 2), (&(solutions::d11p2 as fn() -> i64), Some(406725732046))),
     ]); 
     if !(args.len() == 3 || (args.len() == 2 && args[1].as_str() == "all")) {
         println!("Enter exactly two arguments or 'all' as first argument.");
@@ -50,7 +54,7 @@ fn main() {
                 elapsed.as_secs(), elapsed.as_millis() % 1000, elapsed.as_millis() / num_solutions as u128);
         },
         _ =>  match args[1].parse::<usize>() {
-            Ok(day @ 1..=9)  => match args[1].parse::<usize>() {
+            Ok(day @ 1..=11)  => match args[2].parse::<usize>() {
                 Ok(part @ 1..=2) => {compute_answer(day, part, 
                     &solutions.iter().find(|s| s.0.0 == day && s.0.1 == part).unwrap().1)}
                 Ok(part ) => {
