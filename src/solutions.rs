@@ -717,3 +717,559 @@ pub fn d11p2() -> i64 {
         }).sum::<i64>()
     }).sum::<i64>()
 }
+
+
+pub fn d12p1() -> i64 {
+    let file = fs::read_to_string("input/day12").unwrap();
+    file.split("\n").map(|l| {
+        let mut springs: Vec<char> = vec![];
+        l.split(" ").nth(0).unwrap().chars().for_each(|c| springs.push(c));
+        let mut damaged: Vec<usize> = vec![];
+            l.split(" ").nth(1).unwrap().split(",").map(|e| e.parse::<usize>().unwrap()).into_iter().for_each(|d| {
+                damaged.push(d);
+            });
+        let blocks: Vec<String> = Regex::new(r"([\#, \?]+)").unwrap().captures_iter(&springs.iter().collect::<String>()).map(|r|  {
+            r.iter().nth(1).unwrap().unwrap().as_str().to_owned()
+        }).collect::<Vec<String>>();
+        fn get_options (blocks: Vec<String>, damaged: Vec<usize>) -> i64 {
+            if damaged.clone().len() < 1 {
+                if blocks.clone().into_iter().map(|b| {
+                    b.chars().collect::<Vec<char>>().iter().find(|c| **c == '#').is_some()
+                }).reduce(|a, b| a || b).unwrap_or(false) {
+                    return 0;
+                } else {
+                    return 1;
+                }
+            }
+            if blocks.clone().len() < 1 {
+                return 0;
+            }
+            if blocks.clone().into_iter().map(|b| b.chars().collect::<Vec<char>>().len()).sum::<usize>() + blocks.len() - 1 
+                < damaged.clone().into_iter().sum::<usize>() + damaged.iter().len() - 1 {
+                    return 0;
+                }
+            let currentblock = blocks.first().unwrap().to_owned();
+            let currentdamaged = damaged.first().unwrap().to_owned();
+            if currentblock.contains("#") && currentblock.chars().into_iter().collect::<Vec<char>>().len() < currentdamaged {
+                return 0;
+            };
+            if blocks.iter().map(|b| b.chars().collect::<Vec<char>>().len()).sum::<usize>() + blocks.len() - 1 < ((damaged.iter().sum::<usize>() + damaged.len() - 1)) {
+                return 0;
+            }
+            let first_known_index = currentblock.chars().collect::<Vec<char>>().into_iter().enumerate().find(|e| e .1 == '#').unwrap_or((currentblock.chars().collect::<Vec<char>>().into_iter().len(), '_')).0;
+            let mut sentskipped = false;
+            let theresult = (0..=first_known_index).into_iter().map(|ki| {
+                if currentblock.chars().collect::<Vec<char>>().into_iter().len() < (ki + currentdamaged) {
+                    if !sentskipped && !currentblock.contains("#") {
+                        sentskipped = true;
+                        return get_options(blocks[1..blocks.iter().len()].to_vec(), damaged.clone());
+                    } else {
+                        return 0;
+                    }
+                }
+                if currentblock.chars().collect::<Vec<char>>().into_iter().nth(ki + currentdamaged).unwrap_or('!') == '#' {
+                    if !sentskipped && !currentblock.contains("#") {
+                        sentskipped = true;
+                        return get_options(blocks[1..blocks.iter().len()].to_vec(), damaged.clone());
+                    } else {
+                        return 0;
+                    }
+                }
+                let mut newblock = vec![];
+                ((ki + currentdamaged + 1)..currentblock.len()).into_iter().for_each(|bi| {
+                    newblock.push(currentblock.chars().collect::<Vec<char>>()[bi]);
+                });
+                let mut newblocks: Vec<String> = if newblock.iter().len() > 0 {vec![newblock.clone().into_iter().collect::<String>()]} else {vec![]};
+                blocks[1..blocks.iter().len()].to_vec().iter().for_each(|b| {
+                    newblocks.push(b.clone());
+                });
+                get_options(newblocks, damaged[1..damaged.iter().len()].to_vec())
+            }).sum::<i64>();
+            theresult
+        }
+        get_options(blocks, damaged)
+    }).sum::<i64>()
+}
+
+pub fn d12p2() -> i64 {
+    return 1;
+}
+
+pub fn d13p1() -> i64 {
+    let file = fs::read_to_string("input/day13").unwrap();
+    let mut patterns_parsed : Vec<(Vec<String>, Vec<String>)> = vec![];
+    let patterns = file.split("\n\n");
+    patterns.for_each(|pattern| {
+        let mut newpattern = (vec![], vec![]);
+        let mut characters: Vec<Vec<char>> = vec![];
+        pattern.split("\n").for_each(|l| {
+            newpattern.0.push(l.to_owned());
+            characters.push(l.chars().collect());
+        });
+        (0..(characters[0].len())).into_iter().for_each(|i| {
+            newpattern.1.push(characters.iter().map(|c| c[i]).collect::<String>())
+        });
+        patterns_parsed.push(newpattern);
+    });
+    patterns_parsed.iter().map(|pattern| {
+        let h = (1..pattern.0.len()).into_iter().map(|hi| {
+            if (0..(pattern.0.len()-hi)).into_iter().map(|offset| {
+                if hi > offset {pattern.0[hi + offset].eq(&pattern.0[hi - 1 - offset])} else {true}
+            }).reduce(|a, b| a && b).unwrap() 
+                {hi as i64} else {0 as i64}
+        }).sum::<i64>();
+        let v = (1..pattern.1.len()).into_iter().map(|vi| {
+            if (0..(pattern.1.len()-vi)).into_iter().map(|offset| {
+                if vi > offset {pattern.1[vi + offset].eq(&pattern.1[vi - 1 - offset])} else {true}
+            }).reduce(|a, b| a && b).unwrap() 
+            {vi as i64} else {0 as i64}
+        }).sum::<i64>();
+        if (h * 100 + v) < 1 {
+            println!("!!")
+        }
+        h * 100 + v
+    }).sum::<i64>()
+}
+
+pub fn d13p2() -> i64 {
+    let file = fs::read_to_string("input/day13").unwrap();
+    let mut patterns_parsed : Vec<(Vec<String>, Vec<String>)> = vec![];
+    let patterns = file.split("\n\n");
+    patterns.for_each(|pattern| {
+        let mut newpattern = (vec![], vec![]);
+        let mut characters: Vec<Vec<char>> = vec![];
+        pattern.split("\n").for_each(|l| {
+            newpattern.0.push(l.to_owned());
+            characters.push(l.chars().collect());
+        });
+        (0..(characters[0].len())).into_iter().for_each(|i| {
+            newpattern.1.push(characters.iter().map(|c| c[i]).collect::<String>())
+        });
+        patterns_parsed.push(newpattern);
+    });
+    let original_mirrors = patterns_parsed.iter().map(|pattern| {
+        let h = (1..pattern.0.len()).into_iter().map(|hi| {
+            if (0..(pattern.0.len()-hi)).into_iter().map(|offset| {
+                if hi > offset {pattern.0[hi + offset].eq(&pattern.0[hi - 1 - offset])} else {true}
+            }).reduce(|a, b| a && b).unwrap() 
+                {hi as i64} else {0 as i64}
+        }).sum::<i64>();
+        let v = (1..pattern.1.len()).into_iter().map(|vi| {
+            if (0..(pattern.1.len()-vi)).into_iter().map(|offset| {
+                if vi > offset {pattern.1[vi + offset].eq(&pattern.1[vi - 1 - offset])} else {true}
+            }).reduce(|a, b| a && b).unwrap() 
+            {vi as i64} else {0 as i64}
+        }).sum::<i64>();
+        (h, v)
+    }).collect::<Vec<(i64, i64)>>();
+    patterns_parsed.iter().enumerate().map(|(patterni, pattern)| {
+        let mut found = false;
+        (0..pattern.0.iter().len()).into_iter().map(|line| {
+            (0..pattern.1.iter().len()).into_iter().map(|row| {
+                if found {return 0;}
+                let mut clonedpattern = pattern.clone();
+                clonedpattern.0[line].replace_range(row..(row+1), if pattern.0[line].chars().nth(row).unwrap() == '#' {"."} else {"#"});
+                clonedpattern.1[row].replace_range(line..(line+1), if pattern.1[row].chars().nth(line).unwrap() == '#' {"."} else {"#"});
+                let h = (1..clonedpattern.0.len()).into_iter().map(|hi| {
+                    if hi as i64 == original_mirrors[patterni].0 {return 0;}
+                    if (0..(clonedpattern.0.len()-hi)).into_iter().map(|offset| {
+                        if hi > offset {clonedpattern.0[hi + offset].eq(&clonedpattern.0[hi - 1 - offset])} else {true}
+                    }).reduce(|a, b| a && b).unwrap() 
+                        {
+                            found = true;
+                            hi as i64
+                        } else {0 as i64}
+                }).sum::<i64>();
+                let v = (1..clonedpattern.1.len()).into_iter().map(|vi| {
+                    if vi as i64 == original_mirrors[patterni].1 {return 0;}
+                    if (0..(clonedpattern.1.len()-vi)).into_iter().map(|offset| {
+                        if vi > offset {clonedpattern.1[vi + offset].eq(&clonedpattern.1[vi - 1 - offset])} else {true}
+                    }).reduce(|a, b| a && b).unwrap() 
+                    {
+                        found = true;
+                        vi as i64
+                    } else {0 as i64}
+                }).sum::<i64>();
+                h * 100 + v
+            }).sum::<i64>()
+        }).sum::<i64>()
+    }).sum::<i64>()   
+}
+
+pub fn d14p1() -> i64 {
+    let file = fs::read_to_string("input/day14").unwrap();
+    let mut area: Vec<Vec<char>> = vec![];
+    file.split("\n").for_each(|l| {
+        area.push(l.chars().collect()); 
+    });
+    (0..area.iter().len()).for_each(|li| {
+        (0..area[li].iter().len()).for_each(|ci| {
+            if area[li][ci] == 'O' && li > 0 {
+                let mut rolling = true;
+                (1..=li).rev().for_each(|i| {
+                    if rolling && area[i-1][ci] == '.' {
+                        area[i-1][ci] = 'O';
+                        area[i][ci] = '.';
+                    } else {
+                        rolling = false
+                    }
+
+                })
+            }
+        });
+    });
+    (0..area.iter().len()).map(|li| {
+       (0..area[li].iter().len()).map(|ci| {
+            if area[li][ci] == 'O' {(area.iter().len() - li) as i64} else {0}
+        }).sum::<i64>()
+    }).sum::<i64>()
+}
+
+pub fn d14p2() -> i64 {
+    let file = fs::read_to_string("input/day14").unwrap();
+    let mut area: Vec<Vec<char>> = vec![];
+    file.split("\n").for_each(|l| {
+        area.push(l.chars().collect()); 
+    });
+    let mut snapshot: Vec<Vec<char>> = area.clone();
+    let mut round = 0;
+    let rounds = 1000000000;
+    while round < rounds {
+        (0..area.iter().len()).for_each(|li| {
+            (0..area[li].iter().len()).for_each(|ci| {
+                if area[li][ci] == 'O' && li > 0 {
+                    let mut rolling = true;
+                    (1..=li).rev().for_each(|i| {
+                        if rolling && area[i-1][ci] == '.' {
+                            area[i-1][ci] = 'O';
+                            area[i][ci] = '.';
+                        } else {
+                            rolling = false
+                        }
+
+                    })
+                }
+            });
+        });
+        (0..area.iter().len()).for_each(|li| {
+            (0..area[li].iter().len()).for_each(|ci| {
+                if area[li][ci] == 'O' && ci > 0 {
+                    let mut rolling = true;
+                    (1..=ci).rev().for_each(|i| {
+                        if rolling && area[li][i-1] == '.' {
+                            area[li][i-1] = 'O';
+                            area[li][i] = '.';
+                        } else {
+                            rolling = false
+                        }
+
+                    })
+                }
+            });
+        });
+        (0..area.iter().len()).rev().for_each(|li| {
+            (0..area[li].iter().len()).for_each(|ci| {
+                if area[li][ci] == 'O' {
+                    let mut rolling = true;
+                    (li..(area.iter().len() - 1)).for_each(|i| {
+                        if rolling && area[i+1][ci] == '.' {
+                            area[i+1][ci] = 'O';
+                            area[i][ci] = '.';
+                        } else {
+                            rolling = false
+                        }
+
+                    })
+                }
+            });
+        });
+        (0..area.iter().len()).rev().for_each(|li| {
+            (0..area[li].iter().len()).rev().for_each(|ci| {
+                if area[li][ci] == 'O' {
+                    let mut rolling = true;
+                    (ci..area[li].iter().len() - 1).for_each(|i| {
+                        if rolling && area[li][i+1] == '.' {
+                            area[li][i+1] = 'O';
+                            area[li][i] = '.';
+                        } else {
+                            rolling = false
+                        }
+
+                    })
+                }
+            });
+        });
+        round = round + 1;
+        let check = 1000;
+        if round == check {
+            snapshot = area.clone();
+        } else {
+            if (0..area.iter().len()).map(|li| {
+                (0..area[li].iter().len()).map(|ci| {
+                    area[li][ci] == snapshot[li][ci]
+                }).reduce(|a, b| a && b).unwrap()
+            }).reduce(|a, b| a && b).unwrap() {
+                round = round + (((rounds - round) / (round - check)) * (round - check));
+            }
+        }
+    };
+
+    (0..area.iter().len()).map(|li| {
+        (0..area[li].iter().len()).map(|ci| {
+            if area[li][ci] == 'O' {(area.iter().len() - li) as i64} else {0}
+        }).sum::<i64>()
+    }).sum::<i64>()
+}
+
+
+pub fn d15p1() -> i64 {
+    let file = fs::read_to_string("input/day15").unwrap();
+    let steps = file.split(",").collect::<Vec<&str>>();
+    steps.iter().map(|step| {
+        let mut hash = 0;
+        step.chars().into_iter().for_each(|c| {
+            if c != ' ' {
+                hash = ((hash + c as i64) * 17) % 256;
+            }
+        });
+        hash
+    }).sum::<i64>()
+}
+
+pub fn d15p2() -> i64 {
+    let file = fs::read_to_string("input/day15").unwrap();
+    let steps = file.split(",").collect::<Vec<&str>>();
+    let mut boxes: HashMap<usize, Vec<(String, usize)>> = HashMap::new();
+    steps.iter().for_each(|step| {
+        let label = Regex::new(r"([a-z,A-Z]+)").unwrap().captures_iter(step).map(|r|  {
+                        r.iter().nth(1).unwrap().unwrap().as_str().to_owned()
+                    }).nth(0).unwrap();
+        let operation = step.contains("=");
+        let focallength = Regex::new(r"([0-9])").unwrap().captures_iter(step).map(|r|  {
+                        r.iter().nth(1).unwrap().unwrap().as_str().to_owned()
+                    }).nth(0).unwrap_or("0".to_string()).parse::<usize>().unwrap();
+        let mut thebox: usize = 0;
+        label.clone().chars().into_iter().for_each(|c| {
+            if c != ' ' {
+                thebox = ((thebox + c as usize) * 17) % 256;
+            }
+        });
+        match operation {
+            false => {
+                let current = boxes.get(&thebox);
+                if current.is_some() {
+                    let currentunwrap = current.unwrap().to_owned();
+                    let index = currentunwrap.iter().enumerate().find(|e| e.1.0 == label);
+                    if index.is_some() {
+                        let mut new: Vec<(String, usize)> = vec![];
+                        currentunwrap.iter().enumerate().for_each(|(ci, c)| {
+                            if ci != index.unwrap().0 {
+                                new.push(c.to_owned());
+                            }
+                        });
+                        boxes.insert(thebox, new);
+                    }
+                }
+            },
+            true => {
+                let current = boxes.get(&thebox);
+                if current.is_some() {
+                    let mut currentunwrap = current.unwrap().to_owned();
+                    let index = currentunwrap.iter().enumerate().find(|e| e.1.0 == label);
+                    if index.is_some() {
+                        let mut new: Vec<(String, usize)> = vec![];
+                        currentunwrap.iter().enumerate().for_each(|(ci, c)| {
+                            if ci != index.unwrap().0 { new.push(c.to_owned());
+                            } else { new.push((label.clone(), focallength)); }
+                        });
+                        boxes.insert(thebox, new);
+                    } else {
+                        currentunwrap.push((label.clone(), focallength));
+                        boxes.insert(thebox, currentunwrap);
+                    }
+                } else {
+                    boxes.insert(thebox, vec![(label.clone(), focallength)]);
+                }
+            }
+        }
+    });
+    boxes.iter().map(|b| {
+        b.1.iter().enumerate().map(|(ei, e)| {
+            ((b.0 + 1) * (ei + 1) * e.1)  as i64
+        }).sum::<i64>()
+    }).sum::<i64>()
+}
+
+pub fn d16p1() -> i64 {
+    let file = fs::read_to_string("input/day16").unwrap();
+    let mut map: Vec<Vec<(char, [bool; 4])>> = vec![];
+    file.split("\n").for_each(|l| {
+        let mut newline = vec![];
+        l.chars().collect::<Vec<char>>().iter().for_each(|c| {
+            newline.push((c.to_owned(), [false, false, false, false]));
+        }); 
+        map.push(newline);
+    });
+    let height = map.len();
+    let width = map[0].len();
+    let mut beams: Vec<(usize, usize, usize)> = vec![(0, 0, 1)];
+    while beams.len() > 0 {
+        let currentbeam = beams.pop().unwrap();
+            map[currentbeam.0][currentbeam.1].1[currentbeam.2] = true;
+            match (currentbeam.2, map[currentbeam.0][currentbeam.1].0) {
+                (0, '.') | (0, '|') | (1, '/') | (3, '\\') => {
+                            if currentbeam.0 > 0 {
+                                if !map[currentbeam.0 - 1][currentbeam.1].1[0] {
+                                    beams.push((currentbeam.0 - 1, currentbeam.1, 0));
+                                };
+                            }
+                },
+                (0, '\\') | (2, '/') | (3, '.') | (3, '-') => {
+                            if currentbeam.1 > 0 {
+                                if !map[currentbeam.0][currentbeam.1 - 1].1[3] {
+                                    beams.push((currentbeam.0, currentbeam.1 - 1, 3));
+                                }
+                            }
+                },
+                (0, '/') | (1, '.') | (1, '-') | (2, '\\') => {
+                            if currentbeam.1 < (width - 1) {
+                                if !map[currentbeam.0][currentbeam.1 + 1].1[1] {
+                                    beams.push((currentbeam.0, currentbeam.1 + 1, 1));
+                                }
+                            }
+                },
+                (1, '\\') | (2, '.') | (2, '|') | (3, '/') => {
+                            if currentbeam.0 < (height - 1) {
+                                if !map[currentbeam.0 + 1][currentbeam.1].1[2] {
+                                    beams.push((currentbeam.0 + 1, currentbeam.1, 2));
+                                }
+                            }
+                },
+                (0, '-') | (2, '-') => {
+                            if currentbeam.1 > 0 {
+                                if !map[currentbeam.0][currentbeam.1 - 1].1[3] {
+                                    beams.push((currentbeam.0, currentbeam.1 - 1, 3));
+                                }
+                            }
+                            if currentbeam.1 < (width - 1) {
+                                if !map[currentbeam.0][currentbeam.1 + 1].1[1] {
+                                    beams.push((currentbeam.0, currentbeam.1 + 1, 1));
+                                }
+                            }
+                },
+                (1, '|') | (3, '|') => {
+                            if currentbeam.0 > 0 {
+                                if !map[currentbeam.0 - 1][currentbeam.1].1[0] {
+                                    beams.push((currentbeam.0 - 1, currentbeam.1, 0));
+                                }
+                            }
+                            if currentbeam.0 < (height - 1) {
+                                if !map[currentbeam.0 + 1][currentbeam.1].1[2] {
+                                    beams.push((currentbeam.0 + 1, currentbeam.1, 2));
+                                }
+                            }
+                },
+                _ => {}
+            }
+    }
+    map.iter().map(|l| {
+        l.iter().map(|e| {
+            if e.1.iter().map(|v| *v).reduce(|a, b| a || b).unwrap() {1} else {0}
+        }).sum::<i64>()
+    }).sum::<i64>()
+}
+
+pub fn d16p2() -> i64 {
+    let file = fs::read_to_string("input/day16").unwrap();
+    let mut map: Vec<Vec<(char, [bool; 4])>> = vec![];
+    file.split("\n").for_each(|l| {
+        let mut newline = vec![];
+        l.chars().collect::<Vec<char>>().iter().for_each(|c| {
+            newline.push((c.to_owned(), [false, false, false, false]));
+        }); 
+        map.push(newline);
+    });
+    let height = map.len();
+    let width = map[0].len();
+    let mut possiblestartbeams = vec![];
+    (0..width).into_iter().for_each(|w| { 
+        possiblestartbeams.push((0, w, 2));
+        possiblestartbeams.push((height - 1, w, 0));
+    });
+    (0..height).into_iter().for_each(|h| { 
+        possiblestartbeams.push((h, 0, 1));
+        possiblestartbeams.push((h, width - 1, 3));
+    });
+    possiblestartbeams.iter().map(|sb| {
+        map.iter_mut().for_each(|l| {
+            l.iter_mut().for_each(|e| {
+                e.1 = [false, false, false, false];
+            })
+        });
+        let mut beams: Vec<(usize, usize, usize)> = vec![sb.clone()];
+        while beams.len() > 0 {
+            let currentbeam = beams.pop().unwrap();
+            map[currentbeam.0][currentbeam.1].1[currentbeam.2] = true;
+            match (currentbeam.2, map[currentbeam.0][currentbeam.1].0) {
+                (0, '.') | (0, '|') | (1, '/') | (3, '\\') => {
+                            if currentbeam.0 > 0 {
+                                if !map[currentbeam.0 - 1][currentbeam.1].1[0] {
+                                    beams.push((currentbeam.0 - 1, currentbeam.1, 0));
+                                };
+                            }
+                },
+                (0, '\\') | (2, '/') | (3, '.') | (3, '-') => {
+                            if currentbeam.1 > 0 {
+                                if !map[currentbeam.0][currentbeam.1 - 1].1[3] {
+                                    beams.push((currentbeam.0, currentbeam.1 - 1, 3));
+                                }
+                            }
+                },
+                (0, '/') | (1, '.') | (1, '-') | (2, '\\') => {
+                            if currentbeam.1 < (width - 1) {
+                                if !map[currentbeam.0][currentbeam.1 + 1].1[1] {
+                                    beams.push((currentbeam.0, currentbeam.1 + 1, 1));
+                                }
+                            }
+                },
+                (1, '\\') | (2, '.') | (2, '|') | (3, '/') => {
+                            if currentbeam.0 < (height - 1) {
+                                if !map[currentbeam.0 + 1][currentbeam.1].1[2] {
+                                    beams.push((currentbeam.0 + 1, currentbeam.1, 2));
+                                }
+                            }
+                },
+                (0, '-') | (2, '-') => {
+                            if currentbeam.1 > 0 {
+                                if !map[currentbeam.0][currentbeam.1 - 1].1[3] {
+                                    beams.push((currentbeam.0, currentbeam.1 - 1, 3));
+                                }
+                            }
+                            if currentbeam.1 < (width - 1) {
+                                if !map[currentbeam.0][currentbeam.1 + 1].1[1] {
+                                    beams.push((currentbeam.0, currentbeam.1 + 1, 1));
+                                }
+                            }
+                },
+                (1, '|') | (3, '|') => {
+                            if currentbeam.0 > 0 {
+                                if !map[currentbeam.0 - 1][currentbeam.1].1[0] {
+                                    beams.push((currentbeam.0 - 1, currentbeam.1, 0));
+                                }
+                            }
+                            if currentbeam.0 < (height - 1) {
+                                if !map[currentbeam.0 + 1][currentbeam.1].1[2] {
+                                    beams.push((currentbeam.0 + 1, currentbeam.1, 2));
+                                }
+                            }
+                },
+                _ => {}
+            }
+        }
+        map.iter().map(|l| {
+            l.iter().map(|e| {
+                if e.1.iter().map(|v| *v).reduce(|a, b| a || b).unwrap() {1} else {0}
+            }).sum::<i64>()
+        }).sum::<i64>()
+    }).max().unwrap()
+}

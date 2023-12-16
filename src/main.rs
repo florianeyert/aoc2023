@@ -9,7 +9,7 @@ fn compute_answer(day: usize, part: usize, solution: &(&fn() -> i64, Option<i64>
     if (solution.1).is_some() {
         assert_eq!(result, (solution.1).unwrap())
     }
-    println!("[Day {: >2}][Part {}] Solution: {: >15} [{: >3}.{:0>3}ms]", day, part, result,
+    println!("[Day {: >2}][Part {}] Solution: {: >15} [{: >4}.{:0>3}ms]", day, part, result,
         now.elapsed().as_millis(), now.elapsed().as_micros() % 1000);
 }
 fn main() {
@@ -37,6 +37,16 @@ fn main() {
         ((10, 2), (&(solutions::d10p2 as fn() -> i64), Some(381))),
         ((11, 1), (&(solutions::d11p1 as fn() -> i64), Some(9545480))),
         ((11, 2), (&(solutions::d11p2 as fn() -> i64), Some(406725732046))),
+        ((12, 1), (&(solutions::d12p1 as fn() -> i64), Some(7307))),
+        ((12, 2), (&(solutions::d12p2 as fn() -> i64), None)),
+        ((13, 1), (&(solutions::d13p1 as fn() -> i64), Some(35521))),
+        ((13, 2), (&(solutions::d13p2 as fn() -> i64), Some(34795))),
+        ((14, 1), (&(solutions::d14p1 as fn() -> i64), Some(110128))),
+        ((14, 2), (&(solutions::d14p2 as fn() -> i64), Some(103861))),
+        ((15, 1), (&(solutions::d15p1 as fn() -> i64), Some(506269))),
+        ((15, 2), (&(solutions::d15p2 as fn() -> i64), Some(264021))),
+        ((16, 1), (&(solutions::d16p1 as fn() -> i64), Some(7951))),
+        ((16, 2), (&(solutions::d16p2 as fn() -> i64), Some(8148))),
     ]); 
     if !(args.len() == 3 || (args.len() == 2 && args[1].as_str() == "all")) {
         println!("Enter exactly two arguments or 'all' as first argument.");
@@ -54,7 +64,7 @@ fn main() {
                 elapsed.as_secs(), elapsed.as_millis() % 1000, elapsed.as_millis() / num_solutions as u128);
         },
         _ =>  match args[1].parse::<usize>() {
-            Ok(day @ 1..=11)  => match args[2].parse::<usize>() {
+            Ok(day @ 1..=16)  => match args[2].parse::<usize>() {
                 Ok(part @ 1..=2) => {compute_answer(day, part, 
                     &solutions.iter().find(|s| s.0.0 == day && s.0.1 == part).unwrap().1)}
                 Ok(part ) => {
